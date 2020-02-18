@@ -2,7 +2,7 @@ use std::fs::File;
 use std::io;
 use std::io::Read;
 
-fn read_from_file(filename: &String) -> io::Result<String> {
+fn read_from_file(filename: &str) -> io::Result<String> {
     let mut file_contents = String::new();
     File::open(filename)?.read_to_string(&mut file_contents)?;
     Ok(file_contents)
@@ -14,7 +14,7 @@ enum Action {
     Decode,
 }
 
-fn perform_action(action: &Action, contents: &String) -> io::Result<()> {
+fn perform_action(action: &Action, contents: &str) -> io::Result<()> {
     match action {
         Action::Encode => println!("{}", base64::encode(contents)),
         Action::Decode => {
@@ -30,7 +30,7 @@ fn perform_action(action: &Action, contents: &String) -> io::Result<()> {
     Ok(())
 }
 
-fn get_contents(filename: &String) -> io::Result<String> {
+fn get_contents(filename: &str) -> io::Result<String> {
     read_from_file(filename).map_err(|e| match e.kind() {
         io::ErrorKind::NotFound => io::Error::new(
             io::ErrorKind::InvalidInput,
@@ -56,10 +56,12 @@ fn parse_args() -> io::Result<(String, Action)> {
         )
         .get_matches();
 
-    let filename = matches.value_of("FILE").ok_or(io::Error::new(
-        io::ErrorKind::InvalidInput,
-        "Could not get filename from arguments",
-    ))?;
+    let filename = matches.value_of("FILE").ok_or_else(|| {
+        io::Error::new(
+            io::ErrorKind::InvalidInput,
+            "Could not get filename from arguments",
+        )
+    })?;
 
     let action = if matches.is_present("DECODE") {
         Action::Decode
